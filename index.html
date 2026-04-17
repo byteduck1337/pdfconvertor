@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>PDF Редактор Pro - С поддержкой OCR</title>
+    <title>PDF Редактор - Полное редактирование текста</title>
     <style>
         * {
             margin: 0;
@@ -63,7 +63,6 @@
             opacity: 0.9;
         }
 
-        /* Вкладки */
         .tabs {
             display: flex;
             gap: 10px;
@@ -95,7 +94,6 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
         }
 
-        /* Контент вкладок */
         .tab-content {
             display: none;
             animation: fadeIn 0.5s ease-in;
@@ -105,7 +103,6 @@
             display: block;
         }
 
-        /* Карточки инструментов */
         .tools {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -133,7 +130,6 @@
             font-size: 1.4em;
         }
 
-        /* Элементы управления */
         .file-input {
             width: 100%;
             padding: 12px;
@@ -171,13 +167,6 @@
             transform: translateY(0);
         }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Превью изображений */
         .image-preview {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -225,11 +214,6 @@
             transition: all 0.3s ease;
         }
 
-        .remove-image:hover {
-            transform: scale(1.1);
-        }
-
-        /* Область PDF */
         .pdf-container {
             background: white;
             border-radius: 20px;
@@ -248,22 +232,37 @@
             border-radius: 15px;
         }
 
-        .text-controls {
+        .edit-controls {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             align-items: center;
-            padding: 10px;
-            background: white;
-            border-radius: 10px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
             margin-bottom: 15px;
         }
 
-        .text-controls input, .text-controls select {
+        .edit-controls input, .edit-controls select {
             padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn {
+            background: #6c757d;
+            flex: 1;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         }
 
         .canvas-container {
@@ -272,26 +271,22 @@
             max-width: 100%;
             overflow-x: auto;
             text-align: center;
+            cursor: text;
         }
 
         #pdfCanvas {
             border: 1px solid #ddd;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            cursor: crosshair;
             max-width: 100%;
             height: auto;
         }
 
-        .coords-info {
-            position: fixed;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
+        .text-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
             pointer-events: none;
-            z-index: 1000;
         }
 
         .status {
@@ -304,6 +299,14 @@
             transition: all 0.3s ease;
         }
 
+        .selection-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+
         @media (max-width: 768px) {
             .tools {
                 grid-template-columns: 1fr;
@@ -314,8 +317,9 @@
                 font-size: 14px;
             }
             
-            .header h1 {
-                font-size: 1.8em;
+            .edit-controls {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
     </style>
@@ -324,10 +328,9 @@
     <div class="container">
         <div class="header">
             <h1>📄 PDF Редактор Pro</h1>
-            <p>Конвертация изображений в PDF | Редактирование PDF с поддержкой текста</p>
+            <p>Полное редактирование текста | Конвертация изображений в PDF</p>
         </div>
 
-        <!-- Вкладки -->
         <div class="tabs">
             <button class="tab-btn active" data-tab="convert">🖼️ Конвертация в PDF</button>
             <button class="tab-btn" data-tab="edit">✏️ Редактор PDF</button>
@@ -353,14 +356,20 @@
             <div class="pdf-container">
                 <div class="pdf-toolbar">
                     <input type="file" id="pdfInput" accept=".pdf">
-                    <button id="ocrTextBtn">🔍 Распознать текст (OCR)</button>
+                    <button id="extractTextBtn">📝 Извлечь весь текст</button>
                     <button id="savePdfBtn">💾 Сохранить PDF</button>
                 </div>
 
-                <!-- Настройки текста -->
-                <div class="text-controls">
-                    <span>✏️ Настройки текста:</span>
-                    <input type="text" id="textInput" placeholder="Введите текст" style="flex: 1;">
+                <!-- Режимы редактирования -->
+                <div class="mode-buttons">
+                    <button id="editModeBtn" class="mode-btn active">✏️ Режим редактирования текста</button>
+                    <button id="addModeBtn" class="mode-btn">➕ Режим добавления текста</button>
+                </div>
+
+                <!-- Панель редактирования -->
+                <div class="edit-controls">
+                    <span style="font-weight: bold;">📝 Редактирование:</span>
+                    <input type="text" id="editTextInput" placeholder="Новый текст для замены" style="flex: 2;">
                     <select id="fontSelect">
                         <option value="helvetica">Helvetica</option>
                         <option value="times">Times Roman</option>
@@ -386,7 +395,16 @@
                 </div>
 
                 <div class="status" id="pdfStatus">
-                    💡 Инструкция: Загрузите PDF, нажмите на любом месте страницы, чтобы добавить текст с выбранными настройками
+                    💡 Инструкция:<br>
+                    - <strong>Режим редактирования:</strong> Выделите мышкой существующий текст на PDF, затем нажмите "Заменить выделенный текст"<br>
+                    - <strong>Режим добавления:</strong> Кликните в любом месте, чтобы добавить новый текст<br>
+                    - <strong>Извлечение текста:</strong> Нажмите "Извлечь весь текст" для получения всего текста с текущей страницы
+                </div>
+                
+                <div id="extractedText" class="selection-info" style="display: none;">
+                    <strong>📋 Извлеченный текст:</strong>
+                    <div id="extractedTextContent" style="margin-top: 10px; max-height: 200px; overflow-y: auto; background: white; padding: 10px; border-radius: 5px;"></div>
+                    <button id="copyExtractedText" style="margin-top: 10px;">📋 Копировать текст</button>
                 </div>
             </div>
         </div>
@@ -395,7 +413,6 @@
     <!-- Библиотеки -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <script>
         // ========== Управление вкладками ==========
@@ -498,6 +515,7 @@
         let currentPageNum = 1;
         let totalPages = 0;
         let scale = 1.5;
+        let isEditMode = true; // true - редактирование, false - добавление
         
         const pdfCanvas = document.getElementById('pdfCanvas');
         const pdfInput = document.getElementById('pdfInput');
@@ -506,15 +524,34 @@
         const nextPageBtn = document.getElementById('nextPage');
         const pageInfoSpan = document.getElementById('pageInfo');
         const pdfStatus = document.getElementById('pdfStatus');
-        const ocrTextBtn = document.getElementById('ocrTextBtn');
+        const extractTextBtn = document.getElementById('extractTextBtn');
+        const editModeBtn = document.getElementById('editModeBtn');
+        const addModeBtn = document.getElementById('addModeBtn');
         
-        // Настройки текста
-        const textInput = document.getElementById('textInput');
+        // Элементы для редактирования
+        const editTextInput = document.getElementById('editTextInput');
         const fontSelect = document.getElementById('fontSelect');
         const fontSize = document.getElementById('fontSize');
         const fontColor = document.getElementById('fontColor');
-
+        
         let pdfDocForRender = null;
+        let extractedTextItems = [];
+        let selectedTextRange = null;
+
+        // Переключение режимов
+        editModeBtn.addEventListener('click', () => {
+            isEditMode = true;
+            editModeBtn.classList.add('active');
+            addModeBtn.classList.remove('active');
+            pdfStatus.innerHTML = '✏️ Режим редактирования: Выделите текст на PDF, затем нажмите кнопку ниже для замены';
+        });
+        
+        addModeBtn.addEventListener('click', () => {
+            isEditMode = false;
+            addModeBtn.classList.add('active');
+            editModeBtn.classList.remove('active');
+            pdfStatus.innerHTML = '➕ Режим добавления: Кликните в любом месте страницы, чтобы добавить новый текст';
+        });
 
         // Загрузка PDF
         pdfInput.addEventListener('change', async (e) => {
@@ -525,7 +562,7 @@
             reader.onload = async (event) => {
                 currentPdfBytes = event.target.result;
                 await loadPDFForEdit(currentPdfBytes);
-                pdfStatus.innerHTML = '✅ PDF загружен. Нажмите на любое место страницы, чтобы добавить текст';
+                pdfStatus.innerHTML = '✅ PDF загружен. ' + (isEditMode ? 'Выделите текст для редактирования' : 'Кликните для добавления текста');
                 pdfStatus.style.background = '#d4edda';
                 setTimeout(() => {
                     pdfStatus.style.background = '#f0f0f0';
@@ -545,6 +582,7 @@
             
             await renderPage(currentPageNum);
             updatePageInfo();
+            await extractTextFromPage();
         }
 
         async function renderPage(pageNum) {
@@ -563,50 +601,169 @@
             await page.render(renderContext).promise;
         }
 
-        function updatePageInfo() {
-            pageInfoSpan.textContent = `Страница ${currentPageNum} / ${totalPages}`;
+        // Извлечение текста со страницы
+        async function extractTextFromPage() {
+            if (!pdfDocForRender) return;
+            
+            const page = await pdfDocForRender.getPage(currentPageNum);
+            const textContent = await page.getTextContent();
+            
+            extractedTextItems = [];
+            let fullText = '';
+            
+            textContent.items.forEach(item => {
+                extractedTextItems.push({
+                    text: item.str,
+                    x: item.transform[4],
+                    y: item.transform[5],
+                    width: item.width,
+                    height: item.height
+                });
+                fullText += item.str + ' ';
+            });
+            
+            return extractedTextItems;
         }
 
-        prevPageBtn.addEventListener('click', async () => {
-            if (currentPageNum <= 1) return;
-            currentPageNum--;
-            await renderPage(currentPageNum);
-            updatePageInfo();
-        });
-
-        nextPageBtn.addEventListener('click', async () => {
-            if (currentPageNum >= totalPages) return;
-            currentPageNum++;
-            await renderPage(currentPageNum);
-            updatePageInfo();
-        });
-
-        // Добавление текста по клику
-        pdfCanvas.addEventListener('click', async (e) => {
-            if (!currentPdfDoc) {
-                alert('Пожалуйста, сначала загрузите PDF файл');
-                return;
-            }
+        // Обработка выделения текста на canvas
+        let selectionStart = null;
+        let selectionEnd = null;
+        let isSelecting = false;
+        
+        pdfCanvas.addEventListener('mousedown', (e) => {
+            if (!isEditMode) return;
             
-            const text = textInput.value.trim();
-            if (!text) {
-                alert('Введите текст в поле выше');
-                return;
-            }
-            
-            // Получаем координаты клика относительно canvas
             const rect = pdfCanvas.getBoundingClientRect();
             const scaleX = pdfCanvas.width / rect.width;
             const scaleY = pdfCanvas.height / rect.height;
             
-            let x = (e.clientX - rect.left) * scaleX;
-            let y = pdfCanvas.height - ((e.clientY - rect.top) * scaleY);
+            selectionStart = {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+            isSelecting = true;
+        });
+        
+        pdfCanvas.addEventListener('mousemove', (e) => {
+            if (!isSelecting || !isEditMode) return;
             
-            // Получаем страницу для редактирования
+            const rect = pdfCanvas.getBoundingClientRect();
+            const scaleX = pdfCanvas.width / rect.width;
+            const scaleY = pdfCanvas.height / rect.height;
+            
+            const currentX = (e.clientX - rect.left) * scaleX;
+            const currentY = (e.clientY - rect.top) * scaleY;
+            
+            // Визуализация выделения
+            const context = pdfCanvas.getContext('2d');
+            renderPage(currentPageNum); // Перерисовываем страницу
+            
+            context.fillStyle = 'rgba(0, 120, 255, 0.3)';
+            context.fillRect(
+                Math.min(selectionStart.x, currentX),
+                Math.min(selectionStart.y, currentY),
+                Math.abs(currentX - selectionStart.x),
+                Math.abs(currentY - selectionStart.y)
+            );
+        });
+        
+        pdfCanvas.addEventListener('mouseup', async (e) => {
+            if (!isSelecting || !isEditMode) {
+                isSelecting = false;
+                return;
+            }
+            
+            const rect = pdfCanvas.getBoundingClientRect();
+            const scaleX = pdfCanvas.width / rect.width;
+            const scaleY = pdfCanvas.height / rect.height;
+            
+            selectionEnd = {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+            
+            isSelecting = false;
+            
+            // Находим текст в области выделения
+            const selectedText = findTextInSelection(selectionStart, selectionEnd);
+            
+            if (selectedText && selectedText.length > 0) {
+                selectedTextRange = selectedText;
+                pdfStatus.innerHTML = `📝 Выделен текст: "${selectedText.text}". Введите новый текст в поле выше и нажмите Enter для замены`;
+                pdfStatus.style.background = '#fff3cd';
+                
+                // Добавляем кнопку замены
+                if (!document.getElementById('replaceBtn')) {
+                    const replaceBtn = document.createElement('button');
+                    replaceBtn.id = 'replaceBtn';
+                    replaceBtn.textContent = '🔄 Заменить выделенный текст';
+                    replaceBtn.style.marginLeft = '10px';
+                    replaceBtn.onclick = replaceSelectedText;
+                    pdfStatus.appendChild(replaceBtn);
+                }
+            } else {
+                pdfStatus.innerHTML = '❌ Текст не найден в выделенной области. Попробуйте выделить область с текстом точнее';
+                pdfStatus.style.background = '#f8d7da';
+                setTimeout(() => {
+                    pdfStatus.style.background = '#f0f0f0';
+                }, 3000);
+            }
+        });
+        
+        function findTextInSelection(start, end) {
+            const minX = Math.min(start.x, end.x);
+            const maxX = Math.max(start.x, end.x);
+            const minY = Math.min(start.y, end.y);
+            const maxY = Math.max(start.y, end.y);
+            
+            const selectedItems = extractedTextItems.filter(item => {
+                const itemX = item.x;
+                const itemY = pdfCanvas.height - item.y;
+                return itemX >= minX && itemX <= maxX && itemY >= minY && itemY <= maxY;
+            });
+            
+            if (selectedItems.length > 0) {
+                return {
+                    text: selectedItems.map(item => item.text).join(' '),
+                    items: selectedItems,
+                    bounds: { minX, maxX, minY, maxY }
+                };
+            }
+            return null;
+        }
+        
+        async function replaceSelectedText() {
+            if (!selectedTextRange || !currentPdfDoc) {
+                alert('Сначала выделите текст для замены');
+                return;
+            }
+            
+            const newText = editTextInput.value.trim();
+            if (!newText) {
+                alert('Введите новый текст');
+                return;
+            }
+            
             const pages = currentPdfDoc.getPages();
             const page = pages[currentPageNum - 1];
             
-            // Настройки цвета
+            // Получаем позицию первого символа выделенного текста
+            const firstItem = selectedTextRange.items[0];
+            const x = firstItem.x;
+            const y = pdfCanvas.height - firstItem.y;
+            
+            // Закрашиваем старый текст (рисуем белый прямоугольник)
+            page.drawRectangle({
+                x: selectedTextRange.bounds.minX,
+                y: y + 10,
+                width: selectedTextRange.bounds.maxX - selectedTextRange.bounds.minX,
+                height: 20,
+                color: { r: 1, g: 1, b: 1 },
+                borderColor: { r: 1, g: 1, b: 1 },
+                borderWidth: 0
+            });
+            
+            // Добавляем новый текст
             let color;
             switch(fontColor.value) {
                 case 'red': color = { r: 1, g: 0, b: 0 }; break;
@@ -615,8 +772,7 @@
                 default: color = { r: 0, g: 0, b: 0 };
             }
             
-            // Добавляем текст
-            page.drawText(text, {
+            page.drawText(newText, {
                 x: x,
                 y: y,
                 size: parseInt(fontSize.value),
@@ -629,68 +785,128 @@
             currentPdfBytes = pdfBytes;
             await loadPDFForEdit(pdfBytes);
             
-            pdfStatus.innerHTML = `✅ Текст "${text}" добавлен в позицию (${Math.round(x)}, ${Math.round(y)})`;
+            pdfStatus.innerHTML = `✅ Текст успешно заменен на "${newText}"`;
+            pdfStatus.style.background = '#d4edda';
+            setTimeout(() => {
+                pdfStatus.style.background = '#f0f0f0';
+            }, 3000);
+            
+            // Удаляем кнопку замены
+            const replaceBtn = document.getElementById('replaceBtn');
+            if (replaceBtn) replaceBtn.remove();
+        }
+        
+        // Добавление текста по клику (режим добавления)
+        pdfCanvas.addEventListener('click', async (e) => {
+            if (isEditMode || !currentPdfDoc) return;
+            
+            const newText = editTextInput.value.trim();
+            if (!newText) {
+                alert('Введите текст для добавления');
+                return;
+            }
+            
+            const rect = pdfCanvas.getBoundingClientRect();
+            const scaleX = pdfCanvas.width / rect.width;
+            const scaleY = pdfCanvas.height / rect.height;
+            
+            let x = (e.clientX - rect.left) * scaleX;
+            let y = pdfCanvas.height - ((e.clientY - rect.top) * scaleY);
+            
+            const pages = currentPdfDoc.getPages();
+            const page = pages[currentPageNum - 1];
+            
+            let color;
+            switch(fontColor.value) {
+                case 'red': color = { r: 1, g: 0, b: 0 }; break;
+                case 'blue': color = { r: 0, g: 0, b: 1 }; break;
+                case 'green': color = { r: 0, g: 1, b: 0 }; break;
+                default: color = { r: 0, g: 0, b: 0 };
+            }
+            
+            page.drawText(newText, {
+                x: x,
+                y: y,
+                size: parseInt(fontSize.value),
+                font: await getFont(fontSelect.value),
+                color: color
+            });
+            
+            const pdfBytes = await currentPdfDoc.save();
+            currentPdfBytes = pdfBytes;
+            await loadPDFForEdit(pdfBytes);
+            
+            pdfStatus.innerHTML = `✅ Текст "${newText}" добавлен в позицию (${Math.round(x)}, ${Math.round(y)})`;
             pdfStatus.style.background = '#d4edda';
             setTimeout(() => {
                 pdfStatus.style.background = '#f0f0f0';
             }, 2000);
         });
-
+        
         async function getFont(fontName) {
-            const { PDFDocument, StandardFonts } = PDFLib;
+            const { StandardFonts } = PDFLib;
             switch(fontName) {
                 case 'times': return await currentPdfDoc.embedFont(StandardFonts.TimesRoman);
                 case 'courier': return await currentPdfDoc.embedFont(StandardFonts.Courier);
                 default: return await currentPdfDoc.embedFont(StandardFonts.Helvetica);
             }
         }
-
-        // OCR - распознавание текста
-        ocrTextBtn.addEventListener('click', async () => {
+        
+        // Извлечение всего текста
+        extractTextBtn.addEventListener('click', async () => {
             if (!currentPdfBytes) {
                 alert('Сначала загрузите PDF файл');
                 return;
             }
             
-            pdfStatus.innerHTML = '🔄 Выполняется OCR распознавание текста... Пожалуйста, подождите';
-            pdfStatus.style.background = '#fff3cd';
+            const extractedDiv = document.getElementById('extractedText');
+            const extractedContent = document.getElementById('extractedTextContent');
             
-            // Конвертируем текущую страницу в изображение для OCR
-            const canvas = pdfCanvas;
-            const imageData = canvas.toDataURL('image/png');
-            
-            try {
-                const worker = await Tesseract.createWorker('rus+eng');
-                const ret = await worker.recognize(imageData);
-                await worker.terminate();
-                
-                const recognizedText = ret.data.text;
-                if (recognizedText.trim()) {
-                    pdfStatus.innerHTML = `📝 Распознанный текст:\n${recognizedText.substring(0, 500)}${recognizedText.length > 500 ? '...' : ''}`;
-                    pdfStatus.style.background = '#d4edda';
-                    
-                    // Предлагаем добавить распознанный текст
-                    if (confirm('Распознанный текст получен. Добавить его на страницу?')) {
-                        textInput.value = recognizedText.substring(0, 200);
-                    }
-                } else {
-                    pdfStatus.innerHTML = '❌ Текст не распознан. Убедитесь, что на странице есть четкий текст';
-                    pdfStatus.style.background = '#f8d7da';
-                }
-            } catch (error) {
-                console.error('OCR Error:', error);
-                pdfStatus.innerHTML = '❌ Ошибка OCR. Попробуйте другую страницу';
-                pdfStatus.style.background = '#f8d7da';
+            let allText = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const page = await pdfDocForRender.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                allText += `\n--- Страница ${i} ---\n${pageText}\n`;
             }
             
+            extractedContent.textContent = allText;
+            extractedDiv.style.display = 'block';
+            
+            pdfStatus.innerHTML = '✅ Текст успешно извлечен со всех страниц';
+            pdfStatus.style.background = '#d4edda';
             setTimeout(() => {
-                if (pdfStatus.style.background !== '#d4edda') {
-                    pdfStatus.style.background = '#f0f0f0';
-                }
-            }, 5000);
+                pdfStatus.style.background = '#f0f0f0';
+            }, 3000);
         });
-
-        // Сохранение PDF
+        
+        // Копирование извлеченного текста
+        document.getElementById('copyExtractedText')?.addEventListener('click', () => {
+            const text = document.getElementById('extractedTextContent').textContent;
+            navigator.clipboard.writeText(text);
+            alert('Текст скопирован в буфер обмена');
+        });
+        
+        function updatePageInfo() {
+            pageInfoSpan.textContent = `Страница ${currentPageNum} / ${totalPages}`;
+        }
+        
+        prevPageBtn.addEventListener('click', async () => {
+            if (currentPageNum <= 1) return;
+            currentPageNum--;
+            await renderPage(currentPageNum);
+            updatePageInfo();
+            await extractTextFromPage();
+        });
+        
+        nextPageBtn.addEventListener('click', async () => {
+            if (currentPageNum >= totalPages) return;
+            currentPageNum++;
+            await renderPage(currentPageNum);
+            updatePageInfo();
+            await extractTextFromPage();
+        });
+        
         savePdfBtn.addEventListener('click', async () => {
             if (!currentPdfBytes) {
                 alert('Нет PDF для сохранения');
@@ -703,7 +919,7 @@
                 pdfStatus.style.background = '#f0f0f0';
             }, 2000);
         });
-
+        
         function downloadPDF(pdfBytes, filename) {
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
@@ -712,38 +928,6 @@
             link.click();
             URL.revokeObjectURL(link.href);
         }
-
-        // Отображение координат при наведении
-        pdfCanvas.addEventListener('mousemove', (e) => {
-            if (!currentPdfDoc) return;
-            
-            const rect = pdfCanvas.getBoundingClientRect();
-            const scaleX = pdfCanvas.width / rect.width;
-            const scaleY = pdfCanvas.height / rect.height;
-            
-            let x = (e.clientX - rect.left) * scaleX;
-            let y = pdfCanvas.height - ((e.clientY - rect.top) * scaleY);
-            
-            // Показываем координаты
-            let coordsDiv = document.querySelector('.coords-info');
-            if (!coordsDiv) {
-                coordsDiv = document.createElement('div');
-                coordsDiv.className = 'coords-info';
-                document.body.appendChild(coordsDiv);
-            }
-            coordsDiv.style.left = (e.clientX + 10) + 'px';
-            coordsDiv.style.top = (e.clientY - 30) + 'px';
-            coordsDiv.innerHTML = `X: ${Math.round(x)}, Y: ${Math.round(y)}`;
-            
-            setTimeout(() => {
-                if (coordsDiv) coordsDiv.style.opacity = '0.7';
-            }, 100);
-        });
-        
-        pdfCanvas.addEventListener('mouseleave', () => {
-            const coordsDiv = document.querySelector('.coords-info');
-            if (coordsDiv) coordsDiv.remove();
-        });
     </script>
 </body>
 </html>
