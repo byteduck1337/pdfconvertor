@@ -12,6 +12,7 @@ let renderTask = null;
 let isSelecting = false;
 let selectionStart = null;
 let canvas, ctx;
+let customFont = null; // для кириллицы
 
 export function initPdfEditor() {
     const container = document.getElementById('edit');
@@ -40,9 +41,9 @@ export function initPdfEditor() {
             <div class="edit-controls">
                 <input type="text" id="editTextInput" placeholder="Текст для вставки" style="flex:2;">
                 <select id="fontSelect">
-                    <option value="helvetica">Helvetica</option>
-                    <option value="times">Times Roman</option>
-                    <option value="courier">Courier</option>
+                    <option value="times">Times Roman (Кириллица)</option>
+                    <option value="helvetica">Helvetica (без кириллицы)</option>
+                    <option value="courier">Courier (без кириллицы)</option>
                 </select>
                 <input type="number" id="fontSize" value="16" min="8" max="72">
                 <select id="fontColor">
@@ -111,7 +112,6 @@ export function initPdfEditor() {
     nextBtn.addEventListener('click', () => changePage(1));
     applyBtn.addEventListener('click', applyEdit);
     
-    // Применение по Enter
     editInput.addEventListener('keypress', e => {
         if (e.key === 'Enter') {
             applyEdit();
@@ -142,10 +142,23 @@ export function initPdfEditor() {
         document.getElementById('extractedTextPanel').style.display = 'none';
     });
     
+    // Загрузка кириллического шрифта (Roboto) через fontkit
+    async function loadCyrillicFont() {
+        try {
+            const fontUrl = 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf';
+            const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+            pdfDoc.registerFontkit(window.fontkit);
+            customFont = await pdfDoc.embedFont(fontBytes);
+        } catch (e) {
+            console.warn('Не удалось загрузить Roboto, используем TimesRoman');
+        }
+    }
+    
     async function loadPdf(file) {
         try {
             const arrayBuffer = await readFileAsArrayBuffer(file);
             pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            await loadCyrillicFont();
             pdfJsDoc = await pdfjsLib.getDocument({ data: arrayBuffer.slice(0) }).promise;
             totalPages = pdfJsDoc.numPages;
             currentPage = 1;
@@ -335,6 +348,18 @@ export function initPdfEditor() {
         }
     }
     
+    async function getFont() {
+        const fontSelect = document.getElementById('fontSelect').value;
+        // Если есть customFont (Roboto) и выбран не Helvetica/Courier, используем его для кириллицы
+        if (customFont && fontSelect !== 'helvetica' && fontSelect !== 'courier') {
+            return customFont;
+        }
+        // Иначе стандартные (но TimesRoman поддерживает кириллицу)
+        if (fontSelect === 'times') return await pdfDoc.embedFont(PDFLib.StandardFonts.TimesRoman);
+        if (fontSelect === 'courier') return await pdfDoc.embedFont(PDFLib.StandardFonts.Courier);
+        return await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    }
+    
     async function replaceText() {
         const newText = document.getElementById('editTextInput').value.trim();
         if (!newText) {
@@ -347,12 +372,7 @@ export function initPdfEditor() {
             const page = pages[currentPage - 1];
             const { height } = page.getSize();
             
-            const fontName = document.getElementById('fontSelect').value;
-            let font;
-            if (fontName === 'times') font = await pdfDoc.embedFont(PDFLib.StandardFonts.TimesRoman);
-            else if (fontName === 'courier') font = await pdfDoc.embedFont(PDFLib.StandardFonts.Courier);
-            else font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-            
+            const font = await getFont();
             const fontSize = parseInt(document.getElementById('fontSize').value);
             const colorName = document.getElementById('fontColor').value;
             const color = { 
@@ -362,17 +382,14 @@ export function initPdfEditor() {
                 green: { r:0,g:1,b:0 } 
             }[colorName];
             
-            // Вычисляем точный bounding box в координатах PDF
             const items = selectedTextRange.items;
             const minPdfX = Math.min(...items.map(i => i.pdfX));
             const maxPdfX = Math.max(...items.map(i => i.pdfX + i.width/scale));
             const minPdfY = Math.min(...items.map(i => i.pdfY));
             const maxPdfY = Math.max(...items.map(i => i.pdfY + i.fontSize));
             
-            // Добавляем небольшой отступ для надёжности
             const padding = 2;
             
-            // Закрашиваем область белым
             page.drawRectangle({
                 x: minPdfX - padding,
                 y: minPdfY - padding,
@@ -381,7 +398,6 @@ export function initPdfEditor() {
                 color: { r: 1, g: 1, b: 1 }
             });
             
-            // Рисуем новый текст, используя координаты первого элемента как базовую линию
             const firstItem = items[0];
             page.drawText(newText, {
                 x: firstItem.pdfX,
@@ -416,12 +432,7 @@ export function initPdfEditor() {
             const pdfX = x / scale;
             const pdfY = height - (y / scale);
             
-            const fontName = document.getElementById('fontSelect').value;
-            let font;
-            if (fontName === 'times') font = await pdfDoc.embedFont(PDFLib.StandardFonts.TimesRoman);
-            else if (fontName === 'courier') font = await pdfDoc.embedFont(PDFLib.StandardFonts.Courier);
-            else font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-            
+            const font = await getFont();
             const fontSize = parseInt(document.getElementById('fontSize').value);
             const colorName = document.getElementById('fontColor').value;
             const color = { 
@@ -492,7 +503,7 @@ export function initPdfEditor() {
             const pages = pdfDoc.getPages();
             const page = pages[currentPage - 1];
             const { width, height } = page.getSize();
-            const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            const font = await getFont();
             
             page.drawText(text, {
                 x: width/2 - 150,
@@ -530,6 +541,8 @@ export function initPdfEditor() {
     async function saveAndReload() {
         const pdfBytes = await pdfDoc.save();
         pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+        // Перезагружаем шрифт
+        await loadCyrillicFont();
         pdfJsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice(0) }).promise;
         await renderPage();
         updatePageInfo();
