@@ -1,12 +1,11 @@
 import { downloadBlob, readFileAsArrayBuffer, showNotification } from './utils.js';
 
-// Глобальные переменные модуля
-let pdfDoc = null;              // PDFDocument из pdf-lib
-let pdfJsDoc = null;            // PDFDocumentProxy из pdf.js
+let pdfDoc = null;
+let pdfJsDoc = null;
 let currentPage = 1;
 let totalPages = 0;
 let scale = 1.5;
-let currentMode = 'edit';       // 'edit', 'add', 'delete', 'watermark'
+let currentMode = 'edit';
 let selectedTextRange = null;
 let extractedItems = [];
 let renderTask = null;
@@ -81,10 +80,8 @@ export function initPdfEditor() {
     canvas = document.getElementById('pdfCanvas');
     ctx = canvas.getContext('2d');
     
-    // Настройка PDF.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
     
-    // Элементы управления
     const selectBtn = document.getElementById('selectPdfBtn');
     const fileInput = document.getElementById('pdfInput');
     const dropZone = document.getElementById('pdfDropZone');
@@ -96,7 +93,6 @@ export function initPdfEditor() {
     const applyBtn = document.getElementById('applyEditBtn');
     const editInput = document.getElementById('editTextInput');
     
-    // Обработчики загрузки файла
     selectBtn.addEventListener('click', () => fileInput.click());
     dropZone.addEventListener('dragover', e => e.preventDefault());
     dropZone.addEventListener('drop', e => {
@@ -108,7 +104,6 @@ export function initPdfEditor() {
         if (e.target.files[0]) loadPdf(e.target.files[0]);
     });
     
-    // Кнопки
     saveBtn.addEventListener('click', savePdf);
     rotateBtn.addEventListener('click', rotatePage);
     extractBtn.addEventListener('click', extractAndShowText);
@@ -116,7 +111,14 @@ export function initPdfEditor() {
     nextBtn.addEventListener('click', () => changePage(1));
     applyBtn.addEventListener('click', applyEdit);
     
-    // Переключение режимов
+    // Применение по Enter
+    editInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') {
+            applyEdit();
+            e.preventDefault();
+        }
+    });
+    
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -127,13 +129,11 @@ export function initPdfEditor() {
         });
     });
     
-    // События canvas
     canvas.addEventListener('mousedown', onMouseDown);
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mouseup', onMouseUp);
     canvas.addEventListener('click', onCanvasClick);
     
-    // Копирование извлечённого текста
     document.getElementById('copyExtractedBtn').addEventListener('click', () => {
         const text = document.getElementById('extractedTextContent').textContent;
         navigator.clipboard.writeText(text).then(() => showNotification('Текст скопирован', 'success'));
@@ -142,7 +142,6 @@ export function initPdfEditor() {
         document.getElementById('extractedTextPanel').style.display = 'none';
     });
     
-    // Функция загрузки PDF
     async function loadPdf(file) {
         try {
             const arrayBuffer = await readFileAsArrayBuffer(file);
@@ -174,12 +173,9 @@ export function initPdfEditor() {
         await renderTask.promise;
         renderTask = null;
         
-        // Извлечение текстовых элементов с правильными координатами
         const textContent = await page.getTextContent();
         extractedItems = textContent.items.map(item => {
-            // Трансформация: [scaleX, skewY, skewX, scaleY, translateX, translateY]
             const tx = item.transform;
-            // В pdf.js Y отсчитывается от нижнего левого угла, нам нужен от верхнего левого для canvas
             const x = tx[4] * scale;
             const y = canvas.height - (tx[5] * scale);
             const width = item.width * scale;
@@ -188,7 +184,6 @@ export function initPdfEditor() {
                 text: item.str,
                 x, y, width, height,
                 original: item,
-                // сохраняем оригинальные координаты для pdf-lib
                 pdfX: tx[4],
                 pdfY: tx[5],
                 fontSize: Math.abs(tx[0])
@@ -211,7 +206,6 @@ export function initPdfEditor() {
         }
     }
     
-    // Обработчики выделения (для режима редактирования)
     function onMouseDown(e) {
         if (currentMode !== 'edit') return;
         const rect = canvas.getBoundingClientRect();
@@ -263,8 +257,11 @@ export function initPdfEditor() {
         const selected = findTextInArea(selectionStart, end);
         if (selected) {
             selectedTextRange = selected;
-            document.getElementById('editTextInput').value = selected.text;
-            updateStatus(`Выделено: "${selected.text.substring(0, 30)}..." Введите новый текст и нажмите "Применить".`);
+            const input = document.getElementById('editTextInput');
+            input.value = selected.text;
+            input.focus();
+            input.select();
+            updateStatus(`Выделено: "${selected.text.substring(0, 30)}..." Нажмите Enter или "Применить" для замены.`);
             highlightSelection(selected);
         } else {
             updateStatus('Текст не найден в выделенной области. Попробуйте ещё раз.');
@@ -283,14 +280,12 @@ export function initPdfEditor() {
         });
         if (items.length === 0) return null;
         
-        // Сортировка по позиции
         items.sort((a, b) => b.y - a.y || a.x - b.x);
         const text = items.map(i => i.text).join(' ');
         return { text, items, bounds: { minX, maxX, minY, maxY } };
     }
     
     function highlightSelection(selected) {
-        // Визуально подсвечиваем выделение на canvas (просто обводим рамкой)
         ctx.save();
         ctx.strokeStyle = '#00f';
         ctx.lineWidth = 2;
@@ -307,10 +302,9 @@ export function initPdfEditor() {
     function clearSelection() {
         selectedTextRange = null;
         document.getElementById('selectionBox').style.display = 'none';
-        if (pdfJsDoc) renderPage(); // перерисовываем без выделения
+        if (pdfJsDoc) renderPage();
     }
     
-    // Клик по canvas (для добавления/удаления/водяного знака)
     async function onCanvasClick(e) {
         if (!pdfDoc) {
             showNotification('Сначала загрузите PDF', 'warning');
@@ -327,8 +321,6 @@ export function initPdfEditor() {
         } else if (currentMode === 'delete') {
             await deleteTextAt(clickX, clickY);
         } else if (currentMode === 'watermark') {
-            // Водяной знак добавляется по клику в центр страницы или в место клика? 
-            // Сделаем диалог с выбором текста и опции размещения по центру.
             await addWatermarkDialog();
         }
     }
@@ -338,11 +330,8 @@ export function initPdfEditor() {
             await replaceText();
         } else if (currentMode === 'edit') {
             showNotification('Сначала выделите текст для редактирования', 'warning');
-        } else {
-            // Если не режим редактирования, то кнопка "Применить" может использоваться для добавления
-            if (currentMode === 'add') {
-                showNotification('Кликните на страницу, чтобы добавить текст', 'info');
-            }
+        } else if (currentMode === 'add') {
+            showNotification('Кликните на страницу, чтобы добавить текст', 'info');
         }
     }
     
@@ -358,7 +347,6 @@ export function initPdfEditor() {
             const page = pages[currentPage - 1];
             const { height } = page.getSize();
             
-            // Настройки шрифта
             const fontName = document.getElementById('fontSelect').value;
             let font;
             if (fontName === 'times') font = await pdfDoc.embedFont(PDFLib.StandardFonts.TimesRoman);
@@ -374,24 +362,27 @@ export function initPdfEditor() {
                 green: { r:0,g:1,b:0 } 
             }[colorName];
             
-            // Вычисляем прямоугольник, охватывающий все выделенные элементы
-            const firstItem = selectedTextRange.items[0];
-            const lastItem = selectedTextRange.items[selectedTextRange.items.length-1];
-            const minPdfX = Math.min(...selectedTextRange.items.map(i => i.pdfX));
-            const maxPdfX = Math.max(...selectedTextRange.items.map(i => i.pdfX + i.width/scale));
-            const minPdfY = Math.min(...selectedTextRange.items.map(i => i.pdfY));
-            const maxPdfY = Math.max(...selectedTextRange.items.map(i => i.pdfY + i.fontSize));
+            // Вычисляем точный bounding box в координатах PDF
+            const items = selectedTextRange.items;
+            const minPdfX = Math.min(...items.map(i => i.pdfX));
+            const maxPdfX = Math.max(...items.map(i => i.pdfX + i.width/scale));
+            const minPdfY = Math.min(...items.map(i => i.pdfY));
+            const maxPdfY = Math.max(...items.map(i => i.pdfY + i.fontSize));
             
-            // Закрашиваем область
+            // Добавляем небольшой отступ для надёжности
+            const padding = 2;
+            
+            // Закрашиваем область белым
             page.drawRectangle({
-                x: minPdfX - 2,
-                y: minPdfY - 2,
-                width: maxPdfX - minPdfX + 4,
-                height: maxPdfY - minPdfY + 4,
-                color: { r:1, g:1, b:1 }
+                x: minPdfX - padding,
+                y: minPdfY - padding,
+                width: (maxPdfX - minPdfX) + 2 * padding,
+                height: (maxPdfY - minPdfY) + 2 * padding,
+                color: { r: 1, g: 1, b: 1 }
             });
             
-            // Рисуем новый текст, используя координаты первого элемента как начало
+            // Рисуем новый текст, используя координаты первого элемента как базовую линию
+            const firstItem = items[0];
             page.drawText(newText, {
                 x: firstItem.pdfX,
                 y: firstItem.pdfY,
@@ -422,7 +413,6 @@ export function initPdfEditor() {
             const page = pages[currentPage - 1];
             const { height } = page.getSize();
             
-            // Преобразование координат: canvas (Y сверху) -> pdf-lib (Y снизу)
             const pdfX = x / scale;
             const pdfY = height - (y / scale);
             
@@ -443,7 +433,7 @@ export function initPdfEditor() {
             
             page.drawText(text, {
                 x: pdfX,
-                y: pdfY - fontSize, // корректировка, чтобы текст был над точкой клика
+                y: pdfY - fontSize,
                 size: fontSize,
                 font,
                 color
@@ -459,7 +449,6 @@ export function initPdfEditor() {
     }
     
     async function deleteTextAt(x, y) {
-        // Ищем текст, в который попал клик
         const item = extractedItems.find(i => 
             x >= i.x && x <= i.x + i.width && y >= i.y && y <= i.y + i.height
         );
@@ -478,7 +467,6 @@ export function initPdfEditor() {
             const width = item.width / scale;
             const heightRect = item.height / scale;
             
-            // Закрашиваем белым прямоугольником
             page.drawRectangle({
                 x: pdfX - 2,
                 y: pdfY - 2,
@@ -506,7 +494,6 @@ export function initPdfEditor() {
             const { width, height } = page.getSize();
             const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
             
-            // Размещаем по центру под углом
             page.drawText(text, {
                 x: width/2 - 150,
                 y: height/2,
@@ -542,7 +529,6 @@ export function initPdfEditor() {
     
     async function saveAndReload() {
         const pdfBytes = await pdfDoc.save();
-        // Обновляем pdfDoc и pdfJsDoc
         pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
         pdfJsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice(0) }).promise;
         await renderPage();
@@ -574,15 +560,14 @@ export function initPdfEditor() {
             statusEl.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
         } else {
             const descriptions = {
-                edit: 'Режим редактирования: выделите текст мышью, затем измените его в поле и нажмите "Применить".',
-                add: 'Режим добавления: введите текст в поле, выберите шрифт/размер/цвет и кликните в нужное место на странице.',
-                delete: 'Режим удаления: кликните по тексту, который хотите удалить.',
-                watermark: 'Режим водяного знака: нажмите на страницу, чтобы добавить водяной знак (по центру).'
+                edit: '✏️ Режим редактирования: выделите текст мышью, измените и нажмите Enter.',
+                add: '➕ Режим добавления: введите текст и кликните на страницу.',
+                delete: '🗑️ Режим удаления: кликните по тексту для удаления.',
+                watermark: '💧 Режим водяного знака: кликните для добавления.'
             };
             statusEl.innerHTML = `<i class="fas fa-info-circle"></i> ${descriptions[currentMode]}`;
         }
     }
     
-    // Инициализация статуса
     updateStatus('Загрузите PDF файл для начала работы.');
 }
