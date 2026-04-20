@@ -1,27 +1,27 @@
-import { downloadBlob, readFileAsDataURL, showNotification, escapeHtml } from './utils.js';
+п»їimport { downloadBlob, readFileAsDataURL, showNotification, escapeHtml } from './utils.js';
 
-let images = []; // массив { file, dataUrl, width, height, rotation }
+let images = []; // РјР°СЃСЃРёРІ { file, dataUrl, width, height, rotation }
 let pageSize = 'fit'; // 'fit', 'a4', 'letter'
 
 export function initConverter() {
     const container = document.getElementById('convert');
     container.innerHTML = `
         <div class="tool-card">
-            <h3><i class="fas fa-images"></i> Конвертация изображений в PDF</h3>
+            <h3><i class="fas fa-images"></i> РљРѕРЅРІРµСЂС‚Р°С†РёСЏ РёР·РѕР±СЂР°Р¶РµРЅРёР№ РІ PDF</h3>
             <div class="drop-zone" id="imageDropZone">
                 <i class="fas fa-cloud-upload-alt fa-3x"></i>
-                <p>Перетащите изображения сюда или <strong>кликните для выбора</strong></p>
+                <p>РџРµСЂРµС‚Р°С‰РёС‚Рµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ СЃСЋРґР° РёР»Рё <strong>РєР»РёРєРЅРёС‚Рµ РґР»СЏ РІС‹Р±РѕСЂР°</strong></p>
                 <input type="file" id="imageInput" multiple accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
             </div>
             
             <div class="options-panel">
-                <label>Размер страницы:</label>
+                <label>Р Р°Р·РјРµСЂ СЃС‚СЂР°РЅРёС†С‹:</label>
                 <select id="pageSizeSelect">
-                    <option value="fit">По размеру изображения</option>
+                    <option value="fit">РџРѕ СЂР°Р·РјРµСЂСѓ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ</option>
                     <option value="a4">A4 (595x842 pt)</option>
                     <option value="letter">Letter (612x792 pt)</option>
                 </select>
-                <label style="margin-left:15px;">Качество JPEG:</label>
+                <label style="margin-left:15px;">РљР°С‡РµСЃС‚РІРѕ JPEG:</label>
                 <input type="range" id="jpegQuality" min="0.1" max="1.0" step="0.1" value="0.9">
                 <span id="qualityValue">90%</span>
             </div>
@@ -29,8 +29,8 @@ export function initConverter() {
             <div id="imagePreview" class="image-preview-grid"></div>
             
             <div class="action-buttons">
-                <button id="convertBtn"><i class="fas fa-file-pdf"></i> Конвертировать в PDF</button>
-                <button id="clearImagesBtn" class="secondary-btn"><i class="fas fa-trash-alt"></i> Очистить</button>
+                <button id="convertBtn"><i class="fas fa-file-pdf"></i> РљРѕРЅРІРµСЂС‚РёСЂРѕРІР°С‚СЊ РІ PDF</button>
+                <button id="clearImagesBtn" class="secondary-btn"><i class="fas fa-trash-alt"></i> РћС‡РёСЃС‚РёС‚СЊ</button>
             </div>
         </div>
     `;
@@ -44,7 +44,7 @@ export function initConverter() {
     const qualitySlider = document.getElementById('jpegQuality');
     const qualitySpan = document.getElementById('qualityValue');
     
-    // Настройки
+    // РќР°СЃС‚СЂРѕР№РєРё
     pageSizeSelect.addEventListener('change', e => pageSize = e.target.value);
     qualitySlider.addEventListener('input', e => {
         qualitySpan.textContent = Math.round(e.target.value * 100) + '%';
@@ -69,7 +69,7 @@ export function initConverter() {
         const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
         for (const file of fileArray) {
             const dataUrl = await readFileAsDataURL(file);
-            // Получаем размеры
+            // РџРѕР»СѓС‡Р°РµРј СЂР°Р·РјРµСЂС‹
             const img = new Image();
             img.src = dataUrl;
             await new Promise(resolve => { img.onload = resolve; });
@@ -92,14 +92,14 @@ export function initConverter() {
             item.innerHTML = `
                 <img src="${escapeHtml(img.dataUrl)}" alt="preview" style="transform: rotate(${img.rotation}deg);">
                 <div class="image-actions">
-                    <button class="rotate-btn" data-index="${index}" title="Повернуть"><i class="fas fa-undo-alt"></i></button>
-                    <button class="remove-btn" data-index="${index}" title="Удалить"><i class="fas fa-times"></i></button>
+                    <button class="rotate-btn" data-index="${index}" title="РџРѕРІРµСЂРЅСѓС‚СЊ"><i class="fas fa-undo-alt"></i></button>
+                    <button class="remove-btn" data-index="${index}" title="РЈРґР°Р»РёС‚СЊ"><i class="fas fa-times"></i></button>
                 </div>
             `;
             previewDiv.appendChild(item);
         });
         
-        // Обработчики кнопок
+        // РћР±СЂР°Р±РѕС‚С‡РёРєРё РєРЅРѕРїРѕРє
         document.querySelectorAll('.rotate-btn').forEach(btn => {
             btn.addEventListener('click', e => {
                 const idx = e.currentTarget.dataset.index;
@@ -120,12 +120,12 @@ export function initConverter() {
         images = [];
         renderPreview();
         input.value = '';
-        showNotification('Список изображений очищен', 'info');
+        showNotification('РЎРїРёСЃРѕРє РёР·РѕР±СЂР°Р¶РµРЅРёР№ РѕС‡РёС‰РµРЅ', 'info');
     });
     
     convertBtn.addEventListener('click', async () => {
         if (images.length === 0) {
-            showNotification('Добавьте хотя бы одно изображение', 'warning');
+            showNotification('Р”РѕР±Р°РІСЊС‚Рµ С…РѕС‚СЏ Р±С‹ РѕРґРЅРѕ РёР·РѕР±СЂР°Р¶РµРЅРёРµ', 'warning');
             return;
         }
         
@@ -136,11 +136,11 @@ export function initConverter() {
             
             for (const img of images) {
                 let imageEmbed;
-                // Определяем тип
+                // РћРїСЂРµРґРµР»СЏРµРј С‚РёРї
                 if (img.file.type === 'image/png') {
                     imageEmbed = await pdfDoc.embedPng(img.dataUrl);
                 } else {
-                    // Для JPEG можно применить сжатие
+                    // Р”Р»СЏ JPEG РјРѕР¶РЅРѕ РїСЂРёРјРµРЅРёС‚СЊ СЃР¶Р°С‚РёРµ
                     const compressed = await compressImage(img.dataUrl, jpegQuality);
                     imageEmbed = await pdfDoc.embedJpg(compressed);
                 }
@@ -153,11 +153,11 @@ export function initConverter() {
                     pageWidth = imgWidth;
                     pageHeight = imgHeight;
                 } else {
-                    // Стандартные размеры в точках
+                    // РЎС‚Р°РЅРґР°СЂС‚РЅС‹Рµ СЂР°Р·РјРµСЂС‹ РІ С‚РѕС‡РєР°С…
                     const sizes = { a4: [595, 842], letter: [612, 792] };
                     [pageWidth, pageHeight] = sizes[pageSize];
                     
-                    // Масштабируем изображение, чтобы вписать в страницу с сохранением пропорций
+                    // РњР°СЃС€С‚Р°Р±РёСЂСѓРµРј РёР·РѕР±СЂР°Р¶РµРЅРёРµ, С‡С‚РѕР±С‹ РІРїРёСЃР°С‚СЊ РІ СЃС‚СЂР°РЅРёС†Сѓ СЃ СЃРѕС…СЂР°РЅРµРЅРёРµРј РїСЂРѕРїРѕСЂС†РёР№
                     const scale = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
                     const scaledWidth = imgWidth * scale;
                     const scaledHeight = imgHeight * scale;
@@ -169,9 +169,9 @@ export function initConverter() {
                     continue;
                 }
                 
-                // Для fit просто добавляем страницу размером с изображение
+                // Р”Р»СЏ fit РїСЂРѕСЃС‚Рѕ РґРѕР±Р°РІР»СЏРµРј СЃС‚СЂР°РЅРёС†Сѓ СЂР°Р·РјРµСЂРѕРј СЃ РёР·РѕР±СЂР°Р¶РµРЅРёРµ
                 let page = pdfDoc.addPage([pageWidth, pageHeight]);
-                // Учитываем поворот
+                // РЈС‡РёС‚С‹РІР°РµРј РїРѕРІРѕСЂРѕС‚
                 if (img.rotation % 180 !== 0) {
                     page.setSize(pageHeight, pageWidth);
                 }
@@ -186,15 +186,15 @@ export function initConverter() {
             
             const pdfBytes = await pdfDoc.save();
             downloadBlob(new Blob([pdfBytes], { type: 'application/pdf' }), 'converted.pdf');
-            showNotification('PDF успешно создан!', 'success');
+            showNotification('PDF СѓСЃРїРµС€РЅРѕ СЃРѕР·РґР°РЅ!', 'success');
         } catch (error) {
             console.error(error);
-            showNotification('Ошибка конвертации: ' + error.message, 'error');
+            showNotification('РћС€РёР±РєР° РєРѕРЅРІРµСЂС‚Р°С†РёРё: ' + error.message, 'error');
         }
     });
 }
 
-// Функция сжатия JPEG (через canvas)
+// Р¤СѓРЅРєС†РёСЏ СЃР¶Р°С‚РёСЏ JPEG (С‡РµСЂРµР· canvas)
 function compressImage(dataUrl, quality) {
     return new Promise(resolve => {
         const img = new Image();
