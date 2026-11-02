@@ -1,4 +1,5 @@
-import { state, save } from '../core/state.js';
+import { state } from '../core/state.js';
+import { save } from '../core/storage.js';
 import { $, $$, el, clear } from '../core/dom.js';
 import { KANA_DATA, statusOf } from '../data/kana.js';
 import { startKana } from './training/index.js';
