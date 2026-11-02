@@ -1,4 +1,5 @@
-import { state, save } from '../../core/state.js';
+import { state } from '../../core/state.js';
+import { save } from '../../core/storage.js';
 import { $, $$, el, clear } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { DICT_WORDS } from '../../data/dictionary.js';
