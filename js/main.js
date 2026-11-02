@@ -1,7 +1,7 @@
-import { state, initState, save } from './core/state.js';
+import { state, initState } from './core/state.js';
+import { save, getUsername, setUsername } from './core/storage.js';
 import { $, $$ } from './core/dom.js';
 import { go, registerScreen, setLeavers } from './core/router.js';
-import { getUsername, setUsername } from './core/storage.js';
 import { toast } from './core/toast.js';
 
 import { renderSetup, bindSetup } from './features/setup.js';
@@ -142,28 +142,36 @@ const registerScreens = () => {
 };
 
 const start = () => {
-  initState();
-  registerScreens();
-  setLeavers({ leaveTraining: endTraining, leaveSpeed: endSpeed });
+  try {
+    initState();
+    registerScreens();
+    setLeavers({ leaveTraining: endTraining, leaveSpeed: endSpeed });
 
-  bindNav();
-  bindSettings();
-  bindProfile();
-  bindOverlays();
-  bindSetup();
-  bindSpeed();
-  bindDictionary();
-  bindLeaderboard();
+    bindNav();
+    bindSettings();
+    bindProfile();
+    bindOverlays();
+    bindSetup();
+    bindSpeed();
+    bindDictionary();
+    bindLeaderboard();
 
-  const username = getUsername();
-  if (username) {
-    const avatar = $('#profileBtn');
-    if (avatar) avatar.textContent = username[0].toUpperCase();
+    const username = getUsername();
+    if (username) {
+      const avatar = $('#profileBtn');
+      if (avatar) avatar.textContent = username[0].toUpperCase();
+    }
+
+    go('menu');
+    initTilt();
+    initPencilLines();
+  } catch (err) {
+    console.error('KanaMaster init failed:', err);
   }
-
-  go('menu');
-  initTilt();
-  initPencilLines();
 };
 
-document.addEventListener('DOMContentLoaded', start);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', start);
+} else {
+  start();
+}
