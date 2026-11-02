@@ -1,5 +1,4 @@
-import { loadAll, save } from './storage.js';
-export { save };
+import { loadAll } from './storage.js';
 
 export const state = {
   screen: 'menu',
