@@ -1,10 +1,11 @@
-import { state, save } from '../../core/state.js';
+import { state } from '../../core/state.js';
+import { save } from '../../core/storage.js';
 import { $, clear } from '../../core/dom.js';
 import { KANA_DATA } from '../../data/kana.js';
 import { go } from '../../core/router.js';
 import { fmtTime } from '../../core/utils.js';
 import { toast } from '../../core/toast.js';
-import { submitScore } from '../leaderboard/index.js';
+import { renderQE, renderFlashcard, renderMC, renderRomajiSelect, renderStroke } from './methods.js';
 
 let hudTimerId = null;
 
@@ -79,7 +80,7 @@ export const endTraining = () => {
   T.startTime = 0;
 
   go('results');
-  submitScore();
+  import('../leaderboard/index.js').then((m) => m.submitScore());
 };
 
 export const startKana = () => {
@@ -154,11 +155,9 @@ export const nextKanaStage = () => {
   if (!methods.length) methods.push('flashcard');
   const method = methods[Math.floor(Math.random() * methods.length)];
 
-  import('./methods.js').then((mod) => {
-    if (method === 'qe') mod.renderQE(container, char);
-    else if (method === 'flashcard') mod.renderFlashcard(container, char);
-    else if (method === 'mc') mod.renderMC(container, char);
-    else if (method === 'romajiSelect') mod.renderRomajiSelect(container, char);
-    else if (method === 'stroke') mod.renderStroke(container, char);
-  });
+  if (method === 'qe') renderQE(container, char);
+  else if (method === 'flashcard') renderFlashcard(container, char);
+  else if (method === 'mc') renderMC(container, char);
+  else if (method === 'romajiSelect') renderRomajiSelect(container, char);
+  else if (method === 'stroke') renderStroke(container, char);
 };
