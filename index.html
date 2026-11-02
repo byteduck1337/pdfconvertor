@@ -1,54 +1,519 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Мастер | Редактор и Конвертер</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KanaMaster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1><i class="fas fa-file-pdf"></i> PDF Мастер</h1>
-            <p>Полнофункциональный редактор и конвертер в вашем браузере</p>
-        </header>
 
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="convert"><i class="fas fa-images"></i> Конвертация</button>
-            <button class="tab-btn" data-tab="edit"><i class="fas fa-edit"></i> Редактор PDF</button>
-            <button class="tab-btn" data-tab="merge"><i class="fas fa-object-group"></i> Объединение</button>
+  <div class="ambient-light light-1"></div>
+  <div class="ambient-light light-2"></div>
+  <div class="grain-overlay"></div>
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <div class="container">
+
+    <header>
+      <div class="logo" id="logoBtn">
+        <div class="logo-text">KanaMaster</div>
+        <div class="logo-sub">say what? say wha!!!</div>
+      </div>
+
+      <div class="expandable-tabs" id="fx-tabs">
+        <button class="ext-tab active" data-nav="menu">
+          <svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span class="ext-tab-title">Dashboard</span>
+        </button>
+        <button class="ext-tab" data-nav="leaderboard">
+          <svg viewBox="0 0 24 24"><path d="M12 2l3 7H9l3-7z"/><path d="M3 12h4v9H3z"/><path d="M10 10h4v11h-4z"/><path d="M17 12h4v9h-4z"/></svg>
+          <span class="ext-tab-title">Leaderboard</span>
+        </button>
+        <div class="ext-separator"></div>
+        <button class="ext-tab" id="extSettingsBtn">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="ext-tab-title">Settings</span>
+        </button>
+        <button class="ext-tab" data-nav="dict">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span class="ext-tab-title">Dictionary</span>
+        </button>
+        <button class="ext-tab" data-nav="progress">
+          <svg viewBox="0 0 24 24"><path d="M4 20h4v-4h4v-4h4V8h4V4"/></svg>
+          <span class="ext-tab-title">Progress</span>
+        </button>
+      </div>
+
+      <div class="header-actions">
+        <div class="avatar" id="profileBtn">KM</div>
+      </div>
+    </header>
+
+    <div id="screen-menu" class="screen active">
+      <h1 class="section-title">Choose your training</h1>
+      <p class="section-desc">Master Japanese with interactive exercises.</p>
+
+      <div class="training-grid">
+        <div class="training-card" data-nav="setup">
+          <div class="training-card-icon">あ</div>
+          <div class="training-card-title">Kana Recognition</div>
+          <div class="training-card-desc">Drill hiragana & katakana with mixed test methods.</div>
+          <div class="training-card-badge">Drill</div>
         </div>
-
-        <!-- Вкладка конвертации -->
-        <div id="convert" class="tab-content active"></div>
-
-        <!-- Вкладка редактора -->
-        <div id="edit" class="tab-content"></div>
-
-        <!-- Вкладка объединения -->
-        <div id="merge" class="tab-content">
-            <div class="tool-card">
-                <h3><i class="fas fa-layer-group"></i> Объединение PDF файлов</h3>
-                <div class="drop-zone" id="mergeDropZone">
-                    <i class="fas fa-cloud-upload-alt fa-3x"></i>
-                    <p>Перетащите PDF файлы сюда или кликните для выбора</p>
-                    <input type="file" id="mergeFileInput" multiple accept=".pdf" style="display:none;">
-                </div>
-                <div id="mergeFileList" class="file-list"></div>
-                <button id="mergeBtn" class="primary-btn"><i class="fas fa-compress-alt"></i> Объединить PDF</button>
-                <button id="clearMergeBtn"><i class="fas fa-trash"></i> Очистить</button>
-            </div>
+        <div class="training-card" data-nav="srs-start">
+          <div class="training-card-icon">⏱</div>
+          <div class="training-card-title">Spaced Repetition</div>
+          <div class="training-card-desc">Only cards that are <b>due</b>. Rate yourself after each answer.</div>
+          <div class="training-card-badge">SRS</div>
         </div>
+        <div class="training-card" data-nav="dict">
+          <div class="training-card-icon">本</div>
+          <div class="training-card-title">Dictionary</div>
+          <div class="training-card-desc">Add words and sentences. Auto or manual translation.</div>
+          <div class="training-card-badge">Vocab</div>
+        </div>
+        <div class="training-card" data-nav="sentence">
+          <div class="training-card-icon">文</div>
+          <div class="training-card-title">Sentence Builder</div>
+          <div class="training-card-desc">Arrange the words to form a correct Japanese sentence.</div>
+          <div class="training-card-badge">Grammar</div>
+        </div>
+        <div class="training-card" data-nav="verb">
+          <div class="training-card-icon">動</div>
+          <div class="training-card-title">Verb Conjugation</div>
+          <div class="training-card-desc">Practice changing verbs into different forms.</div>
+          <div class="training-card-badge">Grammar</div>
+        </div>
+        <div class="training-card" data-nav="reading">
+          <div class="training-card-icon">読</div>
+          <div class="training-card-title">Interactive Reading</div>
+          <div class="training-card-desc">Read texts and tap words for instant meanings.</div>
+          <div class="training-card-badge">Reading</div>
+        </div>
+        <div class="training-card" data-nav="speed">
+          <div class="training-card-icon">速</div>
+          <div class="training-card-title">SpeedEdging</div>
+          <div class="training-card-desc">Flash words. Type the translation. Climb to SSS rank in 3 minutes.</div>
+          <div class="training-card-badge">Speed</div>
+        </div>
+        <div class="training-card" data-nav="leaderboard">
+          <div class="training-card-icon">優</div>
+          <div class="training-card-title">Global Leaderboard</div>
+          <div class="training-card-desc">Compete with other learners worldwide.</div>
+          <div class="training-card-badge">Gamification</div>
+        </div>
+        <div class="training-card" data-nav="progress">
+          <div class="training-card-icon">島</div>
+          <div class="training-card-title">Learning Island</div>
+          <div class="training-card-desc">Build your virtual world as you master Japanese.</div>
+          <div class="training-card-badge">Gamification</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Библиотеки -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <!-- fontkit для поддержки кириллицы -->
-    <script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
-    
-    <!-- Модули приложения -->
-    <script type="module" src="js/app.js"></script>
+    <div id="screen-setup" class="screen">
+      <div class="mode-header">
+        <div class="mode-header-left">
+          <h1 class="section-title">Kana Recognition</h1>
+          <p class="section-desc">Pick characters to start drilling.</p>
+        </div>
+        <div class="mode-header-center">
+          <div class="legend" style="margin:0;">
+            <span><i class="dot gray"></i>Not learned</span>
+            <span><i class="dot red"></i>Struggling</span>
+            <span><i class="dot yellow"></i>Learning</span>
+            <span><i class="dot green"></i>Mastered</span>
+          </div>
+          <div class="group-tabs" style="margin:0;">
+            <button class="tab-btn active" data-tab="hiragana">Hiragana</button>
+            <button class="tab-btn" data-tab="katakana">Katakana</button>
+          </div>
+        </div>
+        <div class="mode-header-right">
+          <button class="back-btn" data-nav="menu" style="margin:0;">← Back</button>
+        </div>
+      </div>
+      <div class="subgrid" id="subgroupGrid"></div>
+      <button class="start-btn" id="startKanaBtn" disabled style="margin-top:2rem;">Start Practice Session</button>
+    </div>
+
+    <div id="screen-training" class="screen">
+      <div class="test-container">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="stats-bar">
+          <div id="hudStage">Stage 1 / 20</div>
+          <div id="hudScore">Score: 0</div>
+          <div id="hudTimer">0:00</div>
+          <button class="back-btn" id="endBtn" style="padding:0.2rem 0.5rem;margin:0;display:none;">End</button>
+        </div>
+        <div class="method-container" id="methodContainer"></div>
+      </div>
+    </div>
+
+    <div id="screen-speed" class="screen">
+      <div class="mode-header">
+        <div class="mode-header-left">
+          <h1 class="section-title">SpeedEdging</h1>
+          <p class="section-desc">Flash. Recall. Rank up. 3 minutes on the clock.</p>
+        </div>
+        <div class="mode-header-right">
+          <button class="back-btn" id="speedEndBtn" style="margin:0;display:none;">End Session</button>
+          <button class="back-btn" data-nav="menu" style="margin:0;">← Back</button>
+        </div>
+      </div>
+
+      <div class="speed-hud">
+        <div class="speed-hud-left"><div class="speed-lives" id="speedLives"></div></div>
+        <div class="speed-hud-center"><div class="speed-session-timer"><span id="speedSessionTimer">3:00</span></div></div>
+        <div class="speed-hud-right"><div class="speed-streak" id="speedStreak">Streak 0</div></div>
+      </div>
+
+      <div class="speed-stage" id="speedStage">
+        <div class="speed-setup" id="speedNative">
+          <div class="speed-intro-title">What is your native language?</div>
+          <div class="speed-intro-desc">Choose the language you speak.</div>
+          <div class="speed-level-grid" style="max-width:500px;margin-top:2rem;">
+            <button class="speed-level-card speed-native-card" data-native="ru">
+              <div class="speed-level-title">Русский</div>
+              <div class="speed-level-desc">Russian</div>
+            </button>
+            <button class="speed-level-card speed-native-card" data-native="en">
+              <div class="speed-level-title">English</div>
+              <div class="speed-level-desc">English</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="speed-setup" id="speedDirection">
+          <div class="speed-intro-title">What do you want to practice?</div>
+          <div class="speed-intro-desc">Choose the translation direction.</div>
+          <div class="speed-level-grid" style="max-width:500px;margin-top:2rem;">
+            <button class="speed-level-card speed-direction-card" data-dir="native2jp">
+              <div class="speed-level-title">My language → Japanese</div>
+              <div class="speed-level-desc">Type the Japanese translation</div>
+            </button>
+            <button class="speed-level-card speed-direction-card" data-dir="jp2native">
+              <div class="speed-level-title">Japanese → My language</div>
+              <div class="speed-level-desc">Type the translation in your language</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="speed-setup" id="speedSetup">
+          <div class="speed-intro-title">Japanese keyboard?</div>
+          <div class="speed-intro-desc">Do you have a Japanese IME enabled on this device? If not, Japanese answers will be accepted in romaji.</div>
+          <div class="speed-setup-actions">
+            <button class="start-btn" id="speedKbYes" style="width:auto;padding:1rem 1.75rem;">Yes, I have it</button>
+            <button class="back-btn" id="speedKbNo" style="margin:0;">No, use romaji</button>
+          </div>
+          <div class="speed-setup-note" id="speedSetupNote"></div>
+        </div>
+
+        <div class="speed-level" id="speedLevel">
+          <div class="speed-intro-title">Choose your level</div>
+          <div class="speed-intro-desc">Pick the vocabulary tier that matches you.</div>
+          <div class="speed-level-grid" id="speedLevelGrid">
+            <button class="speed-level-card" data-level="junior">
+              <div class="speed-level-title">Little Junior</div>
+              <div class="speed-level-desc">Everyday basics.</div>
+            </button>
+            <button class="speed-level-card" data-level="n5">
+              <div class="speed-level-title">N5</div>
+              <div class="speed-level-desc">JLPT N5.</div>
+            </button>
+            <button class="speed-level-card" data-level="n4">
+              <div class="speed-level-title">N4</div>
+              <div class="speed-level-desc">JLPT N4.</div>
+            </button>
+            <button class="speed-level-card" data-level="n3">
+              <div class="speed-level-title">N3</div>
+              <div class="speed-level-desc">JLPT N3.</div>
+            </button>
+            <button class="speed-level-card" data-level="n2">
+              <div class="speed-level-title">N2</div>
+              <div class="speed-level-desc">JLPT N2.</div>
+            </button>
+            <button class="speed-level-card" data-level="n1">
+              <div class="speed-level-title">N1</div>
+              <div class="speed-level-desc">JLPT N1.</div>
+            </button>
+            <button class="speed-level-card" data-level="quepro">
+              <div class="speed-level-title">QUE PRO</div>
+              <div class="speed-level-desc">Everything.</div>
+            </button>
+          </div>
+          <div class="speed-setup-note" id="speedLevelNote"></div>
+        </div>
+
+        <div class="speed-intro" id="speedIntro">
+          <div class="speed-intro-title">Ready?</div>
+          <div class="speed-intro-desc">Watch the word. Remember it. Type the translation before the bar empties.</div>
+          <button class="start-btn" id="speedStartBtn" style="width:auto;padding:1rem 2rem;margin-top:2rem;">Start SpeedEdging</button>
+          <div class="speed-settings-wrap" id="speedSettingsWrap">
+            <button class="speed-settings-btn" id="speedSettingsBtn" aria-label="Settings">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <div class="speed-settings-popover" id="speedSettingsPopover">
+              <div class="speed-settings-title">Gamification Settings</div>
+              <button class="speed-settings-item" id="speedChangeLangBtn"><span>Language & Direction</span></button>
+              <button class="speed-settings-item" id="speedChangeLevelBtn"><span>Difficulty Level</span></button>
+              <button class="speed-settings-item" id="speedChangeKbBtn"><span>Keyboard Answer</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="speed-flash-wrap" id="speedFlashWrap">
+          <div class="speed-flash-word" id="speedFlashWord"></div>
+          <div class="speed-flash-lang" id="speedFlashLang"></div>
+        </div>
+
+        <div class="speed-answer-wrap" id="speedAnswerWrap">
+          <div class="speed-prompt">Say what, Say wha!!!</div>
+          <div class="speed-input-row">
+            <input type="text" class="text-input speed-input" id="speedInput" placeholder="Type the translation..." autocomplete="off" autocapitalize="off" spellcheck="false">
+          </div>
+          <div class="speed-timer-bar-wrap"><div class="speed-timer-bar" id="speedTimerBar"></div></div>
+          <div class="feedback" id="speedFeedback"></div>
+        </div>
+
+        <div class="speed-rank-wrap" id="speedRankWrap">
+          <div class="speed-rank-badge" id="speedRankBadge">D</div>
+        </div>
+
+        <div class="speed-session-end" id="speedSessionEnd">
+          <div class="speed-intro-title">Session Complete</div>
+          <div class="speed-end-stats">
+            <div class="speed-end-stat"><div class="speed-end-val" id="speedEndRank">D</div><div class="speed-end-lbl">Rank</div></div>
+            <div class="speed-end-stat"><div class="speed-end-val" id="speedEndScore">0</div><div class="speed-end-lbl">Score</div></div>
+            <div class="speed-end-stat"><div class="speed-end-val" id="speedEndCorrect">0</div><div class="speed-end-lbl">Correct</div></div>
+            <div class="speed-end-stat"><div class="speed-end-val" id="speedEndWords">0</div><div class="speed-end-lbl">Words</div></div>
+          </div>
+          <div class="speed-end-actions">
+            <button class="start-btn" id="speedRestartBtn" style="width:auto;padding:1rem 2rem;">Play Again</button>
+            <button class="back-btn" data-nav="menu" style="margin:0;">Menu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-results" class="screen" style="text-align:center;padding-top:4rem;">
+      <h1 class="section-title">Session Complete</h1>
+      <div style="display:flex;justify-content:center;gap:2rem;margin:3rem 0;">
+        <div><div style="font-size:2rem;font-family:var(--font-mono);" id="rScore">0</div><div style="color:var(--text-muted);font-size:0.8rem;">Score</div></div>
+        <div><div style="font-size:2rem;font-family:var(--font-mono);" id="rAcc">0%</div><div style="color:var(--text-muted);font-size:0.8rem;">Accuracy</div></div>
+        <div><div style="font-size:2rem;font-family:var(--font-mono);" id="rTime">0:00</div><div style="color:var(--text-muted);font-size:0.8rem;">Time</div></div>
+      </div>
+      <div style="display:flex;justify-content:center;gap:1rem;">
+        <button class="start-btn" style="width:auto;padding:1rem 2rem;" data-nav="setup">New Session</button>
+        <button class="back-btn" data-nav="menu" style="margin:0;">Menu</button>
+      </div>
+    </div>
+
+    <div id="screen-dict" class="screen">
+      <div class="mode-header">
+        <div class="mode-header-left">
+          <h1 class="section-title">Dictionary</h1>
+          <p class="section-desc">Your personal vocabulary.</p>
+        </div>
+        <div class="mode-header-right">
+          <button class="start-btn compact" id="addDictBtn" style="width:auto;padding:0.6rem 1.2rem;font-size:0.8rem;">+ Add Entry</button>
+          <button class="back-btn" data-nav="menu" style="margin:0;">← Back</button>
+        </div>
+      </div>
+      <input type="text" class="dict-search" id="dictSearch" placeholder="Search your dictionary...">
+      <div class="dict-list" id="dictList"></div>
+    </div>
+
+    <div id="screen-sentence" class="screen">
+      <div class="mode-header">
+        <div class="mode-header-left">
+          <h1 class="section-title">Sentence Builder</h1>
+          <p class="section-desc">Translate the phrase by ordering the blocks.</p>
+        </div>
+        <div class="mode-header-right">
+          <button class="back-btn" data-nav="menu" style="margin:0;">← Back</button>
+        </div>
+      </div>
+      <div class="test-container">
+        <div class="instruction" id="sbPrompt" style="font-size:1.2rem;margin-bottom:2rem;"></div>
+        <div class="sentence-answer" id="sbAnswer"></div>
+        <div class="sentence-bank" id="sbBank"></div>
+        <div class="feedback" id="sbFeedback"></div>
+      </div>
+    </div>
+
+    <div id="screen-verb" class="screen">
+      <div class="mode-header">
+        <div class="mode-header-left">
+          <h1 class="section-title">Verb Conjugation</h1>
+          <p class="section-desc">Type the correct form of the verb.</p>
+        </div>
+        <div class="mode-header-right">
+          <button class="back-btn" data-nav="menu" style="margin:0;">← Back</button>
+        </div>
+      </div>
+      <div class="test-container">
+        <div class="kana-display" id="vcVerb" style="font-size:3rem;"></div>
+        <div class="instruction" id="vcHint" style="font-size:1rem;margin-bottom:1.5rem;"></div>
+        <input type="text" class="text-input" id="vcInput" placeholder="Type answer..." autocomplete="off">
+        <div class="feedback" id="vcFeedback"></div>
+      </div>
+    </div>
+
+    <div id="screen-reading" class="screen">
+      <div class="mode-header">
+        <div class="mode-header-left">
+          <h1 class="section-title">Interactive Reading</h1>
+          <p class="section-desc">Tap any highlighted word to see its meaning.</p>
+        </div>
+        <div class="mode-header-right">
+          <button class="back-btn" data-nav="menu" style="margin:0;">← Back</button>
+        </div>
+      </div>
+      <div class="test-container" style="text-align:left;font-size:1.5rem;line-height:2.5;" id="readingContainer"></div>
+    </div>
+
+    <div id="screen-leaderboard" class="screen">
+      <div class="mode-header">
+        <div class="mode-header-left">
+          <h1 class="section-title">Global Leaderboard</h1>
+          <p class="section-desc">Compete with other learners.</p>
+        </div>
+        <div class="mode-header-right">
+          <button class="start-btn compact" id="refreshLeaderboardBtn" style="width:auto;padding:0.6rem 1.2rem;font-size:0.8rem;">↻ Refresh</button>
+          <button class="back-btn" data-nav="menu" style="margin:0;">← Back</button>
+        </div>
+      </div>
+      <div class="dict-item" style="background:var(--glass-highlight);font-weight:bold;font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;">
+        <div style="width:40px;text-align:center;">#</div>
+        <div style="flex:1;">Player</div>
+        <div style="width:80px;text-align:center;">Mastered</div>
+        <div style="width:80px;text-align:center;">Sessions</div>
+        <div style="width:100px;text-align:right;">Time</div>
+      </div>
+      <div class="dict-list" id="leaderboardList" style="margin-top:0.5rem;"></div>
+    </div>
+
+    <div id="screen-progress" class="screen">
+      <div class="mode-header">
+        <div class="mode-header-left">
+          <h1 class="section-title">Learning Island</h1>
+          <p class="section-desc">Your progress visualized.</p>
+        </div>
+        <div class="mode-header-right">
+          <button class="back-btn" data-nav="menu" style="margin:0;">← Back</button>
+        </div>
+      </div>
+      <div class="test-container" style="text-align:center;padding:4rem 2rem;">
+        <div style="font-size:5rem;margin-bottom:2rem;">🏝️</div>
+        <div style="display:flex;justify-content:center;gap:3rem;">
+          <div><div style="font-size:2rem;font-family:var(--font-mono);" id="islandKanji">0</div><div style="color:var(--text-muted);font-size:0.8rem;">Kanji Mastered</div></div>
+          <div><div style="font-size:2rem;font-family:var(--font-mono);" id="islandVocab">0</div><div style="color:var(--text-muted);font-size:0.8rem;">Words Learned</div></div>
+          <div><div style="font-size:2rem;font-family:var(--font-mono);" id="islandSessions">0</div><div style="color:var(--text-muted);font-size:0.8rem;">Sessions</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="dictOverlay">
+    <div class="overlay-card">
+      <div class="overlay-head">
+        <h3>Add to Dictionary</h3>
+        <button class="close-btn" id="closeDictBtn" aria-label="Close">
+          <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="field">
+        <label>Entry Type</label>
+        <div class="type-toggle" id="dictTypeToggle">
+          <button class="tab-btn active" data-type="word">Word</button>
+          <button class="tab-btn" data-type="sentence">Sentence</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="dictNative">Your language (EN / RU)</label>
+        <input type="text" id="dictNative" placeholder="e.g. cat, кошка..." aria-describedby="dictNativeError">
+        <div id="dictNativeError" style="display:none;color:var(--status-error);font-size:0.75rem;margin-top:0.25rem;" role="alert"></div>
+      </div>
+      <div class="field" style="display:flex;gap:0.5rem;">
+        <button class="start-btn" id="localTranslateBtn" style="padding:0.6rem;font-size:0.8rem;background:var(--glass-highlight);color:#fff;box-shadow:none;border:1px solid var(--glass-border);flex:0 0 50px;font-family:var(--font-mono);font-weight:bold;">M</button>
+        <button class="start-btn" id="autoTranslateBtn" style="padding:0.6rem;font-size:0.8rem;background:var(--glass-highlight);color:#fff;box-shadow:none;border:1px solid var(--glass-border);flex:1;">AUTO-TRANSLATE (API)</button>
+      </div>
+      <div class="field">
+        <label for="dictJp">Japanese</label>
+        <input type="text" id="dictJp" placeholder="猫" aria-describedby="dictJpError">
+        <div id="dictJpError" style="display:none;color:var(--status-error);font-size:0.75rem;margin-top:0.25rem;" role="alert"></div>
+      </div>
+      <div class="field">
+        <label for="dictRomaji">Romaji transcription</label>
+        <input type="text" id="dictRomaji" placeholder="neko">
+      </div>
+      <button class="start-btn" id="saveDictBtn" style="margin-top:1rem;">Save Entry</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="settingsOverlay">
+    <div class="overlay-card">
+      <div class="overlay-head">
+        <h3>Settings</h3>
+        <button class="close-btn" id="closeSettingsBtn" aria-label="Close">
+          <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="field">
+        <label>Session Length</label>
+        <div style="display:flex;gap:0.5rem;" id="lengthGrid">
+          <button class="tab-btn" data-length="10">10</button>
+          <button class="tab-btn active" data-length="20">20</button>
+          <button class="tab-btn" data-length="50">50</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Test Methods (Kana Mode)</label>
+        <div class="methods-list">
+          <label class="method-checkbox"><input type="checkbox" value="qe"><span class="checkmark"></span><div class="method-info"><div class="method-title">Q/E Time Attack</div><div class="method-desc">Press Q or E for the correct romaji</div></div></label>
+          <label class="method-checkbox"><input type="checkbox" value="flashcard"><span class="checkmark"></span><div class="method-info"><div class="method-title">Flashcard</div><div class="method-desc">Type the romaji from memory</div></div></label>
+          <label class="method-checkbox"><input type="checkbox" value="mc"><span class="checkmark"></span><div class="method-info"><div class="method-title">Multiple Choice</div><div class="method-desc">Pick the correct romaji from 4 options</div></div></label>
+          <label class="method-checkbox"><input type="checkbox" value="romajiSelect"><span class="checkmark"></span><div class="method-info"><div class="method-title">Romaji Select</div><div class="method-desc">Match kana to romaji visually</div></div></label>
+          <label class="method-checkbox"><input type="checkbox" value="stroke"><span class="checkmark"></span><div class="method-info"><div class="method-title">Stroke Order</div><div class="method-desc">Draw the character on the canvas</div></div></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="profileOverlay">
+    <div class="overlay-card" style="max-width:600px;">
+      <div class="overlay-head" style="border-bottom:none;margin-bottom:0.5rem;padding-bottom:0;">
+        <h3>Profile</h3>
+        <button class="close-btn" id="closeProfileBtn" aria-label="Close">
+          <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="profile-layout">
+        <div class="profile-left">
+          <div class="avatar lg" id="profileAvatarText">KM</div>
+          <div class="profile-name">Learner</div>
+          <div class="profile-sub" style="margin-top:0.5rem;">
+            <input type="text" id="usernameInput" class="text-input" style="width:140px;padding:0.4rem;font-size:0.8rem;height:auto;" placeholder="Your nickname" maxlength="15">
+          </div>
+        </div>
+        <div class="profile-right">
+          <div class="stat-box"><div class="stat-val" id="profSessions">0</div><div class="stat-lbl">Sessions</div></div>
+          <div class="stat-box"><div class="stat-val" id="profAccuracy">0%</div><div class="stat-lbl">Accuracy</div></div>
+          <div class="stat-box"><div class="stat-val" id="profMastered">0</div><div class="stat-lbl">Mastered</div></div>
+          <div class="stat-box"><div class="stat-val" id="profTime">0m</div><div class="stat-lbl">Time Studied</div></div>
+        </div>
+      </div>
+      <button class="start-btn" id="updateLeaderboardBtn" style="background:var(--glass-highlight);color:#fff;margin-bottom:1rem;box-shadow:none;border:1px solid var(--glass-border);">Update Leaderboard</button>
+      <button class="start-btn" id="resetBtn" style="background:rgba(255,50,50,0.1);color:#f87171;border:1px solid rgba(255,50,50,0.3);">Reset All Progress</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/wanakana@5.3.1/wanakana.min.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
