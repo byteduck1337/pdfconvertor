@@ -1,7 +1,15 @@
 import { state } from '../../core/state.js';
 import { $, $$, el, clear } from '../../core/dom.js';
 import { shuffle } from '../../core/utils.js';
-import { completeStage } from './index.js';
+import { completeStage as _completeStage } from './index.js';
+
+const completeStage = (char, isCorrect) => {
+  if (typeof _completeStage !== 'function') {
+    console.error('completeStage not ready');
+    return;
+  }
+  _completeStage(char, isCorrect);
+};
 
 const pickWrong = (correct) => {
   const vals = Object.values(state.train.currentSet || {});
