@@ -1,6 +1,7 @@
-import { state, save } from '../../core/state.js';
+import { state } from '../../core/state.js';
+import { save } from '../../core/storage.js';
 import { $, $$, el, clear } from '../../core/dom.js';
-import { SRS } from '../../srs.js';
+import { SRS } from '../../srs/srs.js';
 import { shuffle } from '../../core/utils.js';
 import { go } from '../../core/router.js';
 import { toast } from '../../core/toast.js';
@@ -46,9 +47,9 @@ export const startSRS = () => {
 
   const hudTimer = setInterval(() => {
     if (T.mode && T.startTime) {
-      const el = Math.floor((Date.now() - T.startTime) / 1000);
-      const m = Math.floor(el / 60);
-      const s = el % 60;
+      const elapsed = Math.floor((Date.now() - T.startTime) / 1000);
+      const m = Math.floor(elapsed / 60);
+      const s = elapsed % 60;
       $('#hudTimer').textContent = `${m}:${String(s).padStart(2, '0')}`;
     }
   }, 1000);
